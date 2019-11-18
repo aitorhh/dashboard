@@ -31,6 +31,7 @@ before_script:
   - sudo apt-get -y install docker-ce libgconf2-4
   - sudo service docker restart
   - docker --version
+  - curl -L https://git.io/get_helm.sh | bash && helm init --skip-refresh --client-only
 
 jobs:
   include:
@@ -42,6 +43,10 @@ jobs:
       after_success:
         - rm -rf $TRAVIS_BUILD_DIR/.tmp
         - bash <(curl -s https://codecov.io/bash)
+    - script:
+        - cd aio/deploy/helm-chart/kubernetes-dashboard
+        - helm lint
+        - helm template
     - script: npm run cluster:start && npm run e2e
     - stage: deploy
       script:
@@ -51,6 +56,7 @@ jobs:
       script:
         - docker login -u $DOCKER_RELEASE_USER -p $DOCKER_RELEASE_PASS
         - npm run docker:push
+        - ./generate-helm-repository.sh
 
 stages:
   - test
